@@ -18,4 +18,17 @@ public class CustomerAuthDao {
     entityManager.persist(customerAuthEntity);
     return customerAuthEntity;
   }
+
+  public CustomerAuthEntity getCustomerAuthByAccessToken(String accessToken) {
+    try {
+      return entityManager.createNamedQuery("getCustomerAuthByAccessToken", CustomerAuthEntity.class).setParameter("access_token", accessToken).getSingleResult();
+    } catch (NoResultException nre){
+      return null;
+    }
+  }
+
+  public CustomerAuthEntity updateCustomerAuth(CustomerAuthEntity customerAuthEntity){
+    entityManager.merge(customerAuthEntity);
+    return customerAuthEntity;
+  }
 }
