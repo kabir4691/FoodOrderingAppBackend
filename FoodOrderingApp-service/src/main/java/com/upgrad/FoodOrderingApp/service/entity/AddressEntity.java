@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
-//This Class represents the Address table in the DB.
+//This class represents the Address table in the database.
 
 
 @Entity
