@@ -1,0 +1,10 @@
+# IDEA
+.idea/
+
+# Target directories
+FoodOrderingApp-api/target/
+FoodOrderingApp-db/target/
+FoodOrderingApp-service/target/
+
+# DB configuration
+FoodOrderingApp-db/src/main/resources/config/localhost.properties
