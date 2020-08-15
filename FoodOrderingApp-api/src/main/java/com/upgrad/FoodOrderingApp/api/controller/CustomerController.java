@@ -51,7 +51,7 @@ public class CustomerController {
     }
 
     @RequestMapping(method = RequestMethod.POST, path = "/login", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<LoginResponse> customerLogin (@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException {
+    public ResponseEntity<LoginResponse> login (@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException {
         
         String authArray = authorization.split("Basic ");
         byte[] decodedArray = Base64.getDecoder().decode(authArray[1]);
