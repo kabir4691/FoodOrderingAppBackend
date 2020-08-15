@@ -123,6 +123,37 @@ public class CustomerService {
     return customerAuthDao.updateCustomerAuth(customerAuthEntity);
   }
 
+  @Transactional(propagation = Propagation.REQUIRED)
+  public CustomerEntity updateDetails(CustomerEntity customerEntity, String accessToken) throws AuthenticationFailedException, UpdateCustomerException {
+
+    CustomerAuthEntity customerAuthEntity = customerAuthDao.getCustomerAuthByAccessToken(accessToken);
+
+    if (customerAuthEntity == null) {
+      throw new AuthenticationFailedException("ATHR-001", "Customer is not Logged in.");
+    }
+
+    if (customerAuthEntity.getLogoutAt() != null) {
+      throw new AuthenticationFailedException("ATHR-002", "Customer is logged out. Log in again to access this endpoint.");
+    }
+
+    final ZonedDateTime nowTime = ZonedDateTime.now();
+
+    if (customerAuthEntity.getExpiresAt().compareTo(nowTime) < 0) {
+      throw new AuthenticationFailedException("ATHR-003", "Your session is expired. Log in again to access this endpoint.");
+    }
+
+    if (customerEntity.getFirstName() == null) {
+      throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
+    }
+
+    CustomerEntity customerToUpdateEntity = customerDao.getCustomerByUuid(customerAuthEntity.getCustomer().getUuid());
+
+    customerToUpdateEntity.setFirstName(customerEntity.getFirstName());
+    customerToUpdateEntity.setLastName(customerEntity.getLastName());
+
+    return customerDao.updateCustomer(customerToUpdateEntity);
+  }
+  
   private boolean isPasswordStrong(String password) {
       
     if (password.length() < 8) {

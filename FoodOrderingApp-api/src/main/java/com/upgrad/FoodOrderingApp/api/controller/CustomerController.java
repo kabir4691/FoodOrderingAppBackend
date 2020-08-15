@@ -4,6 +4,8 @@ import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.business.CustomerBusinessService;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
+import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -84,5 +86,25 @@ public class CustomerController {
             .message("LOGGED OUT SUCCESSFULLY");
 
         return new ResponseEntity<LogoutResponse>(logoutResponse, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, path = "", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<UpdateCustomerResponse> updateDetails(@RequestHeader("authorization") final String authorization, UpdateCustomerRequest updateCustomerRequest) throws AuthenticationFailedException, UpdateCustomerException {
+
+        CustomerEntity customerEntity = new CustomerEntity();
+        customerEntity.setFirstName(updateCustomerRequest.getFirstName());
+        customerEntity.setLastName(updateCustomerRequest.getLastName());
+
+        String accessToken = authorization.split("Bearer ")[1];
+        CustomerEntity updatedCustomerEntity = customerBusinessService.updateCustomerDetails(customerEntity, accessToken);
+
+        UpdateCustomerResponse response = new UpdateCustomerResponse()
+                .firstName(updatedCustomerEntity.getFirstName())
+                .lastName(updatedCustomerEntity.getLastName())
+                .id(updatedCustomerEntity.getUuid())
+                .status("CUSTOMER DETAILS UPDATED SUCCESSFULLY");
+
+        return new ResponseEntity<UpdateCustomerResponse>(
+            response, HttpStatus.OK);
     }
 }
