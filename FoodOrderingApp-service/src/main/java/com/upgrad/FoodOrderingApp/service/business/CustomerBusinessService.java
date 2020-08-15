@@ -1,7 +1,10 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
+import com.upgrad.FoodOrderingApp.service.dao.CustomerAuthDao;
 import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
+import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,6 +68,35 @@ public class CustomerService {
     customerEntity.setPassword(encrypted[1]);
 
     return customerDao.createCustomer(customerEntity);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRED)
+  public CustomerAuthEntity login(String contactNumber, String password) throws AuthenticationFailedException {
+
+    CustomerEntity customerEntity = customerDao.getCustomerByContactNumber(contactNumber);
+    if (customerEntity == null) {
+      throw new AuthenticationFailedException("ATH-001","This contact number has not been registered!");
+    }
+
+    String encrypted = passwordCryptographyProvider.encrypt(password, customerEntity.getSalt());
+
+    if (!(encrypted.equals(customerEntity.getPassword()))) {
+      throw new AuthenticationFailedException("ATH-002","Invalid Credentials");
+    }
+
+    JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
+    CustomerAuthEntity customerAuthEntity = new CustomerAuthEntity();
+    customerAuthEntity.setCustomer(customerEntity);
+
+    final ZonedDateTime nowTime = ZonedDateTime.now();
+    final ZonedDateTime expiresAtTime = now.plusHours(8);
+
+    customerAuthEntity.setAccessToken(jwtTokenProvider.generateToken(customerEntity.getUuid(), nowTime, expiresAtTime));
+    customerAuthEntity.setLoginAt(nowTime);
+    customerAuthEntity.setExpiresAt(expiresAtTime);
+    customerAuthEntity.setUuid(UUID.randomUUID().toString());
+
+    return customerAuthDao.createCustomerAuth(customerAuthEntity);
   }
 
   private boolean isPasswordStrong(String password) {

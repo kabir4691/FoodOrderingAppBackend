@@ -47,4 +47,29 @@ public class CustomerController {
         return new ResponseEntity<SignupCustomerResponse>(
             response, HttpStatus.CREATED);
     }
+
+    @RequestMapping(method = RequestMethod.POST, path = "/login", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<LoginResponse> customerLogin (@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException {
+        
+        String authArray = authorization.split("Basic ");
+        byte[] decodedArray = Base64.getDecoder().decode(authArray[1]);
+        String decodedString = new String(decodedArray);
+        String[] credentialsArray = decodedString.split(":");
+
+        CustomerAuthEntity customerAuthEntity = customerBusinessService.login(decodedArray[0],decodedArray[1]);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("access_token", customerAuthEntity.getAccessToken());
+
+        CustomerEntity customerEntity = customerAuthEntity.getCustomer();
+        LoginResponse response = new LoginResponse()
+            .id(customerEntity.getUuid())
+            .contactNumber(customerEntity.getContactNumber())
+            .emailAddress(customerEntity.getEmail())
+            .firstName(customerEntity.getFirstName())
+            .lastName(customerEntity.getLastName())
+            .message("LOGGED IN SUCCESSFULLY");
+
+        return new ResponseEntity<LoginResponse>(response, headers, HttpStatus.OK);
+    }
 }
